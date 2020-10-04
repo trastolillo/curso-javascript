@@ -18,7 +18,15 @@ class Presupuesto {
 
   nuevoGasto(gasto) {
     this.gastos = [...this.gastos, gasto];
-    console.log(this.gastos);
+    this.calcularRestante();
+  }
+
+  calcularRestante() {
+    const gastado = this.gastos.reduce(
+      (total, gasto) => total + gasto.cantidad,
+      0
+    );
+    this.restante = this.presupuesto - gastado;
   }
 }
 
@@ -42,6 +50,54 @@ class UI {
     setTimeout(() => {
       divMensaje.remove();
     }, 3000);
+  }
+
+  agregarGastoListado(gastos) {
+    this.limpiarHTML();
+    gastos.forEach((gasto) => {
+      const { cantidad, nombre, id } = gasto;
+      const nuevoGasto = document.createElement('li');
+      nuevoGasto.className =
+        'list-group-item d-flex justify-content-between align-items-center';
+      // nuevoGasto.setAttribute('data-id', id); // forma antigua
+      nuevoGasto.dataset.id = id; // Forma moderna
+      const span = document.createElement('span');
+      span.textContent = `\$${cantidad}`;
+      span.className = 'badge badge-primary badge-pill';
+      nuevoGasto.textContent = nombre;
+      nuevoGasto.appendChild(span);
+      const btnBorrar = document.createElement('button');
+      btnBorrar.classList.add('btn', 'btn-danger', 'borrar-gasto');
+      btnBorrar.innerHTML = 'Borrar &times;';
+      nuevoGasto.appendChild(btnBorrar);
+      gastoListado.appendChild(nuevoGasto);
+    });
+  }
+
+  actualizarRestante(restante) {
+    document.querySelector('#restante').textContent = restante;
+  }
+
+  limpiarHTML() {
+    while (gastoListado.firstChild) {
+      gastoListado.removeChild(gastoListado.firstChild);
+    }
+  }
+
+  comprobarPresupuesto(presupuestoObj) {
+    const { presupuesto, restante } = presupuestoObj;
+    const restanteDiv = document.querySelector('.restante');
+    if (restante <= presupuesto * 0.25) {
+      restanteDiv.classList.remove('alert-success', 'alert-warning');
+      restanteDiv.classList.add('alert-danger');
+    } else if (restante <= presupuesto * 0.5) {
+      restanteDiv.classList.remove('alert-success');
+      restanteDiv.classList.add('alert-warning');
+    }
+    if (restante <= 0) {
+      ui.imprimirAlerta('El presupuesto se ha agotado', 'error');
+      formulario.querySelector('button[type="submit"]').disabled = true;
+    }
   }
 }
 // Instancias
@@ -77,5 +133,12 @@ function agregarGasto(e) {
   const gasto = { nombre, cantidad, id: Date.now() };
   presupuesto.nuevoGasto(gasto);
   ui.imprimirAlerta('Gasto agregado correctamente');
+  // Imprimir los gastos
+  const { gastos, restante } = presupuesto;
+  console.log(presupuesto);
+  ui.agregarGastoListado(gastos);
+  ui.actualizarRestante(restante);
+  ui.comprobarPresupuesto(presupuesto);
+  // Reiniciar el formulario
   formulario.reset();
 }
