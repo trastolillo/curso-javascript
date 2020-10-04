@@ -21,6 +21,11 @@ class Presupuesto {
     this.calcularRestante();
   }
 
+  eliminarGasto(id) {
+    this.gastos = this.gastos.filter((gasto) => gasto.id != id);
+    this.calcularRestante();
+  }
+
   calcularRestante() {
     const gastado = this.gastos.reduce(
       (total, gasto) => total + gasto.cantidad,
@@ -52,7 +57,7 @@ class UI {
     }, 3000);
   }
 
-  agregarGastoListado(gastos) {
+  mostrarGastos(gastos) {
     this.limpiarHTML();
     gastos.forEach((gasto) => {
       const { cantidad, nombre, id } = gasto;
@@ -69,6 +74,7 @@ class UI {
       const btnBorrar = document.createElement('button');
       btnBorrar.classList.add('btn', 'btn-danger', 'borrar-gasto');
       btnBorrar.innerHTML = 'Borrar &times;';
+      btnBorrar.onclick = () => eliminarGasto(id);
       nuevoGasto.appendChild(btnBorrar);
       gastoListado.appendChild(nuevoGasto);
     });
@@ -91,8 +97,11 @@ class UI {
       restanteDiv.classList.remove('alert-success', 'alert-warning');
       restanteDiv.classList.add('alert-danger');
     } else if (restante <= presupuesto * 0.5) {
-      restanteDiv.classList.remove('alert-success');
+      restanteDiv.classList.remove('alert-success', 'alert-danger');
       restanteDiv.classList.add('alert-warning');
+    } else {
+      restanteDiv.classList.add('alert-success');
+      restanteDiv.classList.remove('alert-danger', 'alert-warning');
     }
     if (restante <= 0) {
       ui.imprimirAlerta('El presupuesto se ha agotado', 'error');
@@ -136,9 +145,16 @@ function agregarGasto(e) {
   // Imprimir los gastos
   const { gastos, restante } = presupuesto;
   console.log(presupuesto);
-  ui.agregarGastoListado(gastos);
+  ui.mostrarGastos(gastos);
   ui.actualizarRestante(restante);
   ui.comprobarPresupuesto(presupuesto);
   // Reiniciar el formulario
   formulario.reset();
+}
+
+function eliminarGasto(id) {
+  presupuesto.eliminarGasto(id);
+  ui.mostrarGastos(presupuesto.gastos);
+  ui.actualizarRestante(presupuesto.restante);
+  ui.comprobarPresupuesto(presupuesto);
 }
